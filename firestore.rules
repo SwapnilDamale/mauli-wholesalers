@@ -1,0 +1,160 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: products/{productId}
+    //   name: map { en, hi, mr } (string, 1–200)
+    //   description: map { en, hi, mr } (string, 1–4000)
+    //   slug: string (lowercase kebab, 1–100)
+    //   categoryId: string
+    //   unit: 'kg' | 'quintal' | 'dozen' | 'box'
+    //   price: number | null
+    //   priceVisible: bool
+    //   minWholesaleQty: number (positive int)
+    //   images: list of strings (max 20)
+    //   available, seasonal, featured: bool
+    //   order: number
+    //   createdAt, updatedAt: timestamp
+    //
+    // Collection: categories/{categoryId}
+    //   name: map { en, hi, mr }
+    //   slug: string
+    //   enabled: bool
+    //   order: number
+    //
+    // Collection: enquiries/{enquiryId}
+    //   name, phone, message, language (en|hi|mr)
+    //   email, productId, productNameSnapshot, quantity: optional
+    //   createdAt: timestamp
+    //   status: NEVER settable by unauthenticated clients
+    //
+    // Collection: settings/business
+    //   business contact + hours + localized about + social
+    //   Admin SDK reads this for ISR; client SDK is admin-only
+    //
+    // ===============================================================
+
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function validStringLength(data, field, minLen, maxLen) {
+      return data[field] is string
+        && data[field].size() >= minLen
+        && data[field].size() <= maxLen;
+    }
+
+    function isLocalizedText(value, minLen, maxLen) {
+      return value is map
+        && value.keys().hasOnly(['en', 'hi', 'mr'])
+        && value.en is string && value.en.size() >= minLen && value.en.size() <= maxLen
+        && value.hi is string && value.hi.size() >= minLen && value.hi.size() <= maxLen
+        && value.mr is string && value.mr.size() >= minLen && value.mr.size() <= maxLen;
+    }
+
+    function optionalNullableString(data, field, maxLen) {
+      return !(field in data)
+        || data[field] == null
+        || (data[field] is string && data[field].size() <= maxLen);
+    }
+
+    function isValidProduct(data) {
+      return hasOnlyAllowedFields([
+          'name', 'description', 'slug', 'categoryId', 'unit', 'price',
+          'priceVisible', 'minWholesaleQty', 'images', 'available',
+          'seasonal', 'featured', 'order', 'createdAt', 'updatedAt'
+        ])
+        && isLocalizedText(data.name, 1, 200)
+        && isLocalizedText(data.description, 1, 4000)
+        && data.slug is string && data.slug.size() >= 1 && data.slug.size() <= 100
+        && data.categoryId is string && data.categoryId.size() >= 1 && data.categoryId.size() <= 100
+        && data.unit in ['kg', 'quintal', 'dozen', 'box']
+        && (data.price == null || (data.price is number && data.price >= 0))
+        && data.priceVisible is bool
+        && data.minWholesaleQty is number && data.minWholesaleQty > 0
+        && data.images is list && data.images.size() <= 20
+        && data.available is bool
+        && data.seasonal is bool
+        && data.featured is bool
+        && data.order is number && data.order >= 0
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCategory(data) {
+      return hasOnlyAllowedFields(['name', 'slug', 'enabled', 'order'])
+        && isLocalizedText(data.name, 1, 200)
+        && data.slug is string && data.slug.size() >= 1 && data.slug.size() <= 100
+        && data.enabled is bool
+        && data.order is number && data.order >= 0;
+    }
+
+    function isValidEnquiryCreate(data) {
+      return hasOnlyAllowedFields([
+          'name', 'phone', 'email', 'productId', 'productNameSnapshot',
+          'quantity', 'message', 'language', 'createdAt'
+        ])
+        && !('status' in data)
+        && validStringLength(data, 'name', 1, 200)
+        && validStringLength(data, 'phone', 10, 20)
+        && validStringLength(data, 'message', 1, 2000)
+        && data.language in ['en', 'hi', 'mr']
+        && data.createdAt is timestamp
+        && optionalNullableString(data, 'email', 320)
+        && optionalNullableString(data, 'productId', 100)
+        && optionalNullableString(data, 'productNameSnapshot', 200)
+        && optionalNullableString(data, 'quantity', 100);
+    }
+
+    function isValidSettings(data) {
+      return hasOnlyAllowedFields([
+          'businessName', 'phone', 'whatsapp', 'email', 'address',
+          'mapsUrl', 'hours', 'aboutText', 'social'
+        ])
+        && validStringLength(data, 'businessName', 1, 200)
+        && validStringLength(data, 'phone', 1, 40)
+        && validStringLength(data, 'whatsapp', 1, 20)
+        && validStringLength(data, 'email', 3, 320)
+        && validStringLength(data, 'address', 1, 500)
+        && data.mapsUrl is string && data.mapsUrl.size() <= 1000
+        && data.hours is map
+        && isLocalizedText(data.aboutText, 0, 8000)
+        && data.social is map;
+    }
+
+    match /products/{productId} {
+      allow read: if (resource.data.available == true) || isAdmin();
+      allow create, update: if isAdmin() && isValidProduct(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /categories/{categoryId} {
+      allow read: if (resource.data.enabled == true) || isAdmin();
+      allow create, update: if isAdmin() && isValidCategory(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /enquiries/{enquiryId} {
+      allow create: if isValidEnquiryCreate(request.resource.data);
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /settings/{document} {
+      allow read: if isAdmin();
+      allow create, update: if isAdmin() && isValidSettings(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

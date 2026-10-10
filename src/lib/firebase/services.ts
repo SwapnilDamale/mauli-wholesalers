@@ -2,6 +2,7 @@ import type { Product, Category, BusinessSettings, Enquiry, EnquiryStatus } from
 import type { Locale } from '@/i18n/routing';
 import { mockProducts, mockCategories, mockSettings } from '@/lib/mock-data';
 import { isFirebaseAdminConfigured } from '@/lib/firebase/admin';
+import { isFirebaseClientConfigured } from '@/lib/firebase/config';
 import { mapProduct, mapCategory, mapEnquiry, mapBusinessSettings } from '@/lib/firebase/mappers';
 
 async function getDb() {
@@ -157,53 +158,108 @@ export interface CreateEnquiryData {
 }
 
 export async function createEnquiry(data: CreateEnquiryData): Promise<string> {
-  if (!isFirebaseAdminConfigured()) {
-    console.info('[mock] Enquiry submitted:', data);
-    return 'mock-enquiry-id';
+  if (isFirebaseAdminConfigured()) {
+    try {
+      const db = await getDb();
+      const { FieldValue } = await import('firebase-admin/firestore');
+      const docRef = await db.collection('enquiries').add({
+        name: data.name,
+        phone: data.phone,
+        email: data.email,
+        productId: data.productId,
+        productNameSnapshot: data.productNameSnapshot,
+        quantity: data.quantity,
+        message: data.message,
+        language: data.language,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+      return docRef.id;
+    } catch (err) {
+      logDataError('createEnquiry (admin)', err);
+    }
   }
 
-  const db = await getDb();
-  const { FieldValue } = await import('firebase-admin/firestore');
-  const docRef = await db.collection('enquiries').add({
-    name: data.name,
-    phone: data.phone,
-    email: data.email,
-    productId: data.productId,
-    productNameSnapshot: data.productNameSnapshot,
-    quantity: data.quantity,
-    message: data.message,
-    language: data.language,
-    status: 'new',
-    createdAt: FieldValue.serverTimestamp(),
-  });
-  return docRef.id;
+  if (isFirebaseClientConfigured()) {
+    try {
+      const { getClientDb } = await import('@/lib/firebase/config');
+      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+      const docRef = await addDoc(collection(getClientDb(), 'enquiries'), {
+        name: data.name,
+        phone: data.phone,
+        email: data.email || null,
+        productId: data.productId || null,
+        productNameSnapshot: data.productNameSnapshot || '',
+        quantity: data.quantity || null,
+        message: data.message,
+        language: data.language,
+        createdAt: serverTimestamp(),
+      });
+      return docRef.id;
+    } catch (err) {
+      logDataError('createEnquiry (client)', err);
+    }
+  }
+
+  console.info('[mock] Enquiry submitted:', data);
+  return 'mock-enquiry-id';
 }
 
 export async function getEnquiries(status?: EnquiryStatus): Promise<Enquiry[]> {
-  if (!isFirebaseAdminConfigured()) return [];
-
-  try {
-    const db = await getDb();
-    let query = db.collection('enquiries').orderBy('createdAt', 'desc');
-    if (status) {
-      query = db
-        .collection('enquiries')
-        .where('status', '==', status)
-        .orderBy('createdAt', 'desc');
+  if (isFirebaseAdminConfigured()) {
+    try {
+      const db = await getDb();
+      let query = db.collection('enquiries').orderBy('createdAt', 'desc');
+      if (status) {
+        query = db
+          .collection('enquiries')
+          .where('status', '==', status)
+          .orderBy('createdAt', 'desc');
+      }
+      const snapshot = await query.limit(100).get();
+      return snapshot.docs.map((doc) => mapEnquiry(doc.id, doc.data()));
+    } catch (error) {
+      logDataError('getEnquiries (admin)', error);
+      return [];
     }
-    const snapshot = await query.limit(100).get();
-    return snapshot.docs.map((doc) => mapEnquiry(doc.id, doc.data()));
-  } catch (error) {
-    logDataError('getEnquiries', error);
-    return [];
   }
+
+  if (isFirebaseClientConfigured()) {
+    try {
+      const { getClientDb } = await import('@/lib/firebase/config');
+      const { collection, getDocs, query, orderBy, limit, where } = await import('firebase/firestore');
+      let q = query(collection(getClientDb(), 'enquiries'), orderBy('createdAt', 'desc'), limit(100));
+      if (status) {
+        q = query(
+          collection(getClientDb(), 'enquiries'),
+          where('status', '==', status),
+          orderBy('createdAt', 'desc'),
+          limit(100)
+        );
+      }
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map((doc) => mapEnquiry(doc.id, doc.data()));
+    } catch (error) {
+      logDataError('getEnquiries (client)', error);
+      return [];
+    }
+  }
+
+  return [];
 }
 
 export async function updateEnquiryStatus(
   id: string,
   status: EnquiryStatus
 ): Promise<void> {
-  if (!isFirebaseAdminConfigured()) return;
-  const db = await getDb();
-  await db.doc(`enquiries/${id}`).update({ status });
+  if (isFirebaseAdminConfigured()) {
+    const db = await getDb();
+    await db.doc(`enquiries/${id}`).update({ status });
+    return;
+  }
+
+  if (isFirebaseClientConfigured()) {
+    const { getClientDb } = await import('@/lib/firebase/config');
+    const { doc, updateDoc } = await import('firebase/firestore');
+    await updateDoc(doc(getClientDb(), 'enquiries', id), { status });
+  }
 }

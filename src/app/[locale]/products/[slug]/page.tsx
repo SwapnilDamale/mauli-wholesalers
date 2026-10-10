@@ -1,6 +1,6 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { getProductBySlug, getCategories } from '@/lib/services/product-service';
+import { getProductBySlug, getCategories, getBusinessSettings } from '@/lib/services/product-service';
 import { unitLabels, mockProducts } from '@/lib/mock-data';
 import { getProductWhatsAppUrl } from '@/lib/whatsapp';
 import { routing, Link } from '@/i18n/routing';
@@ -38,9 +38,10 @@ export default async function ProductDetailPage({
   const { locale, slug } = await params;
   setRequestLocale(locale);
 
-  const [product, categories] = await Promise.all([
+  const [product, categories, settings] = await Promise.all([
     getProductBySlug(slug),
     getCategories(),
+    getBusinessSettings(),
   ]);
 
   if (!product) notFound();
@@ -52,7 +53,7 @@ export default async function ProductDetailPage({
 
   const loc = locale as Locale;
   const productName = product.name[loc];
-  const whatsappUrl = getProductWhatsAppUrl(productName, loc);
+  const whatsappUrl = getProductWhatsAppUrl(productName, loc, settings.whatsapp);
   const unitLabel = unitLabels[product.unit]?.[loc] || product.unit;
 
   return (

@@ -34,9 +34,9 @@ export default async function ContactPage({
   const loc = locale as Locale;
 
   const settings = await getBusinessSettings();
-  const whatsappUrl = getGeneralWhatsAppUrl(loc);
-  const phoneTel = getPhoneTelUrl();
-  const mapsUrl = getMapsUrl();
+  const whatsappUrl = getGeneralWhatsAppUrl(loc, settings.whatsapp);
+  const phoneTel = getPhoneTelUrl(settings.phone);
+  const mapsUrl = getMapsUrl(settings.mapsUrl);
 
   return (
     <div>

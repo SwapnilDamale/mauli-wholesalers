@@ -2,7 +2,21 @@ import type { Product, Category, BusinessSettings, Enquiry, EnquiryStatus } from
 import type { Locale } from '@/i18n/routing';
 import { mockProducts, mockCategories, mockSettings } from '@/lib/mock-data';
 import { isFirebaseAdminConfigured } from '@/lib/firebase/admin';
-import { isFirebaseClientConfigured } from '@/lib/firebase/config';
+import { db, isFirebaseClientConfigured } from '@/lib/firebase/config';
+import {
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  addDoc,
+  serverTimestamp,
+  getDocs,
+  query,
+  orderBy,
+  limit,
+  where,
+  updateDoc,
+} from 'firebase/firestore';
 import { mapProduct, mapCategory, mapEnquiry, mapBusinessSettings } from '@/lib/firebase/mappers';
 
 async function getDb() {
@@ -133,16 +147,44 @@ export async function getAllCategories(): Promise<Category[]> {
 }
 
 export async function getBusinessSettings(): Promise<BusinessSettings> {
-  if (!isFirebaseAdminConfigured()) return mockSettings;
+  if (isFirebaseAdminConfigured()) {
+    try {
+      const db = await getDb();
+      const doc = await db.doc('settings/business').get();
+      if (doc.exists) return mapBusinessSettings(doc.data() ?? {});
+    } catch (error) {
+      logDataError('getBusinessSettings (admin)', error);
+    }
+  }
 
-  try {
-    const db = await getDb();
-    const doc = await db.doc('settings/business').get();
-    if (!doc.exists) return mockSettings;
-    return mapBusinessSettings(doc.data() ?? {});
-  } catch (error) {
-    logDataError('getBusinessSettings', error);
-    return mockSettings;
+  if (isFirebaseClientConfigured()) {
+    try {
+      const docSnap = await getDoc(doc(db, 'settings', 'business'));
+      if (docSnap.exists()) {
+        return mapBusinessSettings(docSnap.data());
+      }
+    } catch (error) {
+      logDataError('getBusinessSettings (client)', error);
+    }
+  }
+
+  return mockSettings;
+}
+
+export async function saveBusinessSettings(data: BusinessSettings): Promise<void> {
+  if (isFirebaseAdminConfigured()) {
+    const adminDb = await getDb();
+    await adminDb.doc('settings/business').set(data, { merge: true });
+    return;
+  }
+
+  if (isFirebaseClientConfigured()) {
+    try {
+      await setDoc(doc(db, 'settings', 'business'), data, { merge: true });
+    } catch (err) {
+      // In Spark plan, client-side setDoc in AdminSettingsClient performs the authenticated write.
+      logDataError('saveBusinessSettings (client)', err);
+    }
   }
 }
 
@@ -160,9 +202,9 @@ export interface CreateEnquiryData {
 export async function createEnquiry(data: CreateEnquiryData): Promise<string> {
   if (isFirebaseAdminConfigured()) {
     try {
-      const db = await getDb();
+      const adminDb = await getDb();
       const { FieldValue } = await import('firebase-admin/firestore');
-      const docRef = await db.collection('enquiries').add({
+      const docRef = await adminDb.collection('enquiries').add({
         name: data.name,
         phone: data.phone,
         email: data.email,
@@ -181,9 +223,7 @@ export async function createEnquiry(data: CreateEnquiryData): Promise<string> {
 
   if (isFirebaseClientConfigured()) {
     try {
-      const { getClientDb } = await import('@/lib/firebase/config');
-      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
-      const docRef = await addDoc(collection(getClientDb(), 'enquiries'), {
+      const docRef = await addDoc(collection(db, 'enquiries'), {
         name: data.name,
         phone: data.phone,
         email: data.email || null,
@@ -207,10 +247,10 @@ export async function createEnquiry(data: CreateEnquiryData): Promise<string> {
 export async function getEnquiries(status?: EnquiryStatus): Promise<Enquiry[]> {
   if (isFirebaseAdminConfigured()) {
     try {
-      const db = await getDb();
-      let query = db.collection('enquiries').orderBy('createdAt', 'desc');
+      const adminDb = await getDb();
+      let query = adminDb.collection('enquiries').orderBy('createdAt', 'desc');
       if (status) {
-        query = db
+        query = adminDb
           .collection('enquiries')
           .where('status', '==', status)
           .orderBy('createdAt', 'desc');
@@ -225,12 +265,10 @@ export async function getEnquiries(status?: EnquiryStatus): Promise<Enquiry[]> {
 
   if (isFirebaseClientConfigured()) {
     try {
-      const { getClientDb } = await import('@/lib/firebase/config');
-      const { collection, getDocs, query, orderBy, limit, where } = await import('firebase/firestore');
-      let q = query(collection(getClientDb(), 'enquiries'), orderBy('createdAt', 'desc'), limit(100));
+      let q = query(collection(db, 'enquiries'), orderBy('createdAt', 'desc'), limit(100));
       if (status) {
         q = query(
-          collection(getClientDb(), 'enquiries'),
+          collection(db, 'enquiries'),
           where('status', '==', status),
           orderBy('createdAt', 'desc'),
           limit(100)
@@ -252,14 +290,16 @@ export async function updateEnquiryStatus(
   status: EnquiryStatus
 ): Promise<void> {
   if (isFirebaseAdminConfigured()) {
-    const db = await getDb();
-    await db.doc(`enquiries/${id}`).update({ status });
+    const adminDb = await getDb();
+    await adminDb.doc(`enquiries/${id}`).update({ status });
     return;
   }
 
   if (isFirebaseClientConfigured()) {
-    const { getClientDb } = await import('@/lib/firebase/config');
-    const { doc, updateDoc } = await import('firebase/firestore');
-    await updateDoc(doc(getClientDb(), 'enquiries', id), { status });
+    try {
+      await updateDoc(doc(db, 'enquiries', id), { status });
+    } catch (err) {
+      logDataError('updateEnquiryStatus (client)', err);
+    }
   }
 }

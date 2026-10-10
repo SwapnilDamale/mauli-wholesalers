@@ -4,6 +4,8 @@ import { useState, useTransition } from 'react';
 import type { BusinessSettings } from '@/types';
 import Button from '@/components/ui/Button';
 import { saveSettingsAction } from '@/actions/admin';
+import { db } from '@/lib/firebase/config';
+import { doc, setDoc } from 'firebase/firestore';
 
 interface AdminSettingsClientProps {
   settings: BusinessSettings;
@@ -19,6 +21,12 @@ export default function AdminSettingsClient({ settings: initialSettings }: Admin
     setSuccessMsg(false);
 
     startTransition(async () => {
+      try {
+        await setDoc(doc(db, 'settings', 'business'), settings, { merge: true });
+      } catch (clientErr) {
+        console.warn('Client direct save note:', clientErr);
+      }
+
       const res = await saveSettingsAction(settings);
       if (res.success) {
         setSuccessMsg(true);

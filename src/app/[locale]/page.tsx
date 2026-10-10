@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { Link } from '@/i18n/routing';
 import type { Locale } from '@/i18n/routing';
 import { categoryIcons, categoryImages } from '@/lib/mock-data';
-import { getCategories, getFeaturedProducts } from '@/lib/services/product-service';
+import { getCategories, getFeaturedProducts, getBusinessSettings } from '@/lib/services/product-service';
 import { getGeneralWhatsAppUrl, getPhoneNumber, getPhoneTelUrl, getMapsUrl } from '@/lib/whatsapp';
 import { buildPageMetadata } from '@/lib/seo';
 import ProductCard from '@/components/ui/ProductCard';
@@ -34,15 +34,16 @@ export default async function HomePage({
   const tNav = await getTranslations('nav');
 
   const loc = locale as Locale;
-  const [featuredProducts, categories] = await Promise.all([
+  const [featuredProducts, categories, settings] = await Promise.all([
     getFeaturedProducts(),
     getCategories(),
+    getBusinessSettings(),
   ]);
 
-  const whatsappUrl = getGeneralWhatsAppUrl(loc);
-  const phone = getPhoneNumber();
-  const phoneTel = getPhoneTelUrl();
-  const mapsUrl = getMapsUrl();
+  const whatsappUrl = getGeneralWhatsAppUrl(loc, settings.whatsapp);
+  const phone = getPhoneNumber(settings.phone);
+  const phoneTel = getPhoneTelUrl(settings.phone);
+  const mapsUrl = getMapsUrl(settings.mapsUrl);
 
   return (
     <div>

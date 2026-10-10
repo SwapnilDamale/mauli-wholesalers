@@ -51,5 +51,6 @@ export async function getAllCategories(): Promise<Category[]> {
 // ─── Business Settings ──────────────────────────────────────────
 
 export async function getBusinessSettings(): Promise<BusinessSettings> {
-  return mockSettings;
+  const { getBusinessSettings: getFbBusinessSettings } = await import('@/lib/firebase/services');
+  return getFbBusinessSettings();
 }

@@ -8,6 +8,8 @@ import Footer from '@/components/layout/Footer';
 import MobileCTABar from '@/components/layout/MobileCTABar';
 import GA4 from '@/components/analytics/GA4';
 
+import { getBusinessSettings } from '@/lib/services/product-service';
+
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
@@ -29,8 +31,11 @@ export default async function LocaleLayout({
   // Enable static rendering
   setRequestLocale(locale);
 
-  // Load messages for client components
-  const messages = await getMessages();
+  // Load messages and live settings
+  const [messages, settings] = await Promise.all([
+    getMessages(),
+    getBusinessSettings(),
+  ]);
 
   return (
     <div className="flex min-h-screen flex-col pb-16 lg:pb-0">
@@ -38,8 +43,8 @@ export default async function LocaleLayout({
       <NextIntlClientProvider messages={messages}>
         <Header />
         <main id="main-content" className="flex-1">{children}</main>
-        <Footer />
-        <MobileCTABar />
+        <Footer settings={settings} />
+        <MobileCTABar settings={settings} />
       </NextIntlClientProvider>
     </div>
   );

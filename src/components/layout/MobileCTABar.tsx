@@ -1,15 +1,20 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import type { BusinessSettings } from '@/types';
 
-export default function MobileCTABar() {
+interface MobileCTABarProps {
+  settings?: BusinessSettings;
+}
+
+export default function MobileCTABar({ settings }: MobileCTABarProps) {
   const t = useTranslations('common');
-  const phone = process.env.NEXT_PUBLIC_BUSINESS_PHONE || '+91-XXXXXXXXXX';
-  const whatsapp = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '91XXXXXXXXXX';
-  const mapsUrl = process.env.NEXT_PUBLIC_GOOGLE_MAPS_URL || 'https://maps.google.com';
+  const phone = settings?.phone || process.env.NEXT_PUBLIC_BUSINESS_PHONE || '+91-XXXXXXXXXX';
+  const whatsapp = (settings?.whatsapp || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '91XXXXXXXXXX').replace(/[^+\d]/g, '');
+  const mapsUrl = settings?.mapsUrl || process.env.NEXT_PUBLIC_GOOGLE_MAPS_URL || 'https://maps.google.com';
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-primary-800 bg-primary-700 lg:hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-primary-800 bg-primary-700 lg:hidden shadow-lg">
       <div className="grid grid-cols-3">
         <a
           href={`tel:${phone.replace(/[^+\d]/g, '')}`}

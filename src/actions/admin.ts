@@ -157,13 +157,15 @@ export async function deleteCategoryAction(id: string): Promise<{ success: boole
 
 export async function saveSettingsAction(data: BusinessSettings): Promise<{ success: boolean; error?: string }> {
   try {
-    if (isFirebaseConfigured()) {
-      const db = await getDb();
-      await db.doc('settings/business').set(data, { merge: true });
-    } else {
-      localSettings = { ...data };
-    }
+    const { saveBusinessSettings } = await import('@/lib/firebase/services');
+    await saveBusinessSettings(data);
+    localSettings = { ...data };
+
+    revalidatePath('/', 'layout');
     revalidatePath('/[locale]', 'layout');
+    revalidatePath('/[locale]/contact', 'page');
+    revalidatePath('/[locale]/about', 'page');
+    revalidatePath('/admin/settings', 'page');
     return { success: true };
   } catch (err: any) {
     console.error('saveSettingsAction error:', err);

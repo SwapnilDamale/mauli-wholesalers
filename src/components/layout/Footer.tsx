@@ -2,11 +2,20 @@
 
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
+import type { BusinessSettings } from '@/types';
 
-export default function Footer() {
+interface FooterProps {
+  settings?: BusinessSettings;
+}
+
+export default function Footer({ settings }: FooterProps) {
   const t = useTranslations('footer');
   const tNav = useTranslations('nav');
   const tCommon = useTranslations('common');
+
+  const phone = settings?.phone || process.env.NEXT_PUBLIC_BUSINESS_PHONE || '+91-XXXXXXXXXX';
+  const whatsapp = (settings?.whatsapp || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '91XXXXXXXXXX').replace(/[^+\d]/g, '');
+  const email = settings?.email || 'info@mauliwholesalers.com';
 
   return (
     <footer className="border-t border-surface-200 bg-surface-900 text-surface-300">
@@ -63,13 +72,13 @@ export default function Footer() {
             </h3>
             <ul className="mt-4 space-y-2 text-sm">
               <li>
-                <a href="tel:+91XXXXXXXXXX" className="transition hover:text-primary-400">
-                  📞 +91-XXXXXXXXXX
+                <a href={`tel:${phone.replace(/[^+\d]/g, '')}`} className="transition hover:text-primary-400">
+                  📞 {phone}
                 </a>
               </li>
               <li>
                 <a
-                  href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '91XXXXXXXXXX'}`}
+                  href={`https://wa.me/${whatsapp}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="transition hover:text-primary-400"
@@ -78,8 +87,8 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="mailto:info@mauliwholesalers.com" className="transition hover:text-primary-400">
-                  ✉️ info@mauliwholesalers.com
+                <a href={`mailto:${email}`} className="transition hover:text-primary-400">
+                  ✉️ {email}
                 </a>
               </li>
             </ul>

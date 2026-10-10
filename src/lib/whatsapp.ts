@@ -27,33 +27,40 @@ const generalMessageTemplates: Record<Locale, string> = {
 };
 
 /** Build a wa.me URL for a product enquiry */
-export function getProductWhatsAppUrl(productName: string, locale: Locale): string {
+export function getProductWhatsAppUrl(
+  productName: string,
+  locale: Locale,
+  customWhatsapp?: string
+): string {
+  const number = (customWhatsapp || WHATSAPP_NUMBER).replace(/[^+\d]/g, '');
   const message = productMessageTemplates[locale](productName);
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 }
 
 /** Build a wa.me URL for a general enquiry */
-export function getGeneralWhatsAppUrl(locale: Locale): string {
+export function getGeneralWhatsAppUrl(locale: Locale, customWhatsapp?: string): string {
+  const number = (customWhatsapp || WHATSAPP_NUMBER).replace(/[^+\d]/g, '');
   const message = generalMessageTemplates[locale];
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 }
 
 /** Build a wa.me URL with no pre-filled message */
-export function getWhatsAppBaseUrl(): string {
-  return `https://wa.me/${WHATSAPP_NUMBER}`;
+export function getWhatsAppBaseUrl(customWhatsapp?: string): string {
+  const number = (customWhatsapp || WHATSAPP_NUMBER).replace(/[^+\d]/g, '');
+  return `https://wa.me/${number}`;
 }
 
 /** Get the raw phone number for tel: links */
-export function getPhoneNumber(): string {
-  return process.env.NEXT_PUBLIC_BUSINESS_PHONE || '+91-XXXXXXXXXX';
+export function getPhoneNumber(customPhone?: string): string {
+  return customPhone || process.env.NEXT_PUBLIC_BUSINESS_PHONE || '+91-XXXXXXXXXX';
 }
 
 /** Get the phone number cleaned for tel: href */
-export function getPhoneTelUrl(): string {
-  return `tel:${getPhoneNumber().replace(/[^+\d]/g, '')}`;
+export function getPhoneTelUrl(customPhone?: string): string {
+  return `tel:${getPhoneNumber(customPhone).replace(/[^+\d]/g, '')}`;
 }
 
 /** Get Google Maps directions URL */
-export function getMapsUrl(): string {
-  return process.env.NEXT_PUBLIC_GOOGLE_MAPS_URL || 'https://maps.google.com/?q=Market+Yard+Pune';
+export function getMapsUrl(customMapsUrl?: string): string {
+  return customMapsUrl || process.env.NEXT_PUBLIC_GOOGLE_MAPS_URL || 'https://maps.google.com/?q=Market+Yard+Pune';
 }

@@ -14,16 +14,16 @@ const productMessageTemplates: Record<Locale, (productName: string) => string> =
   en: (product) =>
     `Hello ${BUSINESS_NAME}, I am interested in ${product}. Please share the current wholesale price and availability.`,
   hi: (product) =>
-    `नमस्ते ${BUSINESS_NAME}, मुझे ${product} चाहिए। कृपया वर्तमान थोक कीमत और उपलब्धता बताएं।`,
+    `नमस्ते माऊली होलसेलर्स, मुझे ${product} चाहिए। कृपया वर्तमान थोक कीमत और उपलब्धता बताएं।`,
   mr: (product) =>
-    `नमस्कार ${BUSINESS_NAME}, मला ${product} हवा आहे. कृपया सध्याची घाऊक किंमत आणि उपलब्धता सांगा.`,
+    `नमस्कार माऊली होलसेलर्स, मला ${product} हवा आहे. कृपया सध्याची घाऊक किंमत आणि उपलब्धता सांगा.`,
 };
 
 /** Locale-specific general enquiry message templates */
 const generalMessageTemplates: Record<Locale, string> = {
   en: `Hello ${BUSINESS_NAME}, I am interested in your wholesale products. Please share more details.`,
-  hi: `नमस्ते ${BUSINESS_NAME}, मुझे आपके थोक उत्पादों में रुचि है। कृपया अधिक जानकारी दें।`,
-  mr: `नमस्कार ${BUSINESS_NAME}, मला तुमच्या घाऊक उत्पादनांमध्ये रस आहे. कृपया अधिक माहिती द्या.`,
+  hi: `नमस्ते माऊली होलसेलर्स, मुझे आपके थोक उत्पादों में रुचि है। कृपया अधिक जानकारी दें।`,
+  mr: `नमस्कार माऊली होलसेलर्स, मला तुमच्या घाऊक उत्पादनांमध्ये रस आहे. कृपया अधिक माहिती द्या.`,
 };
 
 /** Build a wa.me URL for a product enquiry */

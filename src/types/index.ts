@@ -34,6 +34,7 @@ export interface Category {
   slug: string;
   enabled: boolean;
   order: number;
+  image?: string;
 }
 
 /** Enquiry document in Firestore: enquiries/{enquiryId} */

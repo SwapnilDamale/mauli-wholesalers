@@ -55,9 +55,9 @@
   --color-surface-900: #1c1917;
   --color-surface-950: #0c0a09;
 
-  /* === Typography === */
-  --font-sans: "Inter", "Noto Sans Devanagari", system-ui, -apple-system, sans-serif;
-  --font-heading: "Inter", "Noto Sans Devanagari", system-ui, -apple-system, sans-serif;
+  /* === Typography — uses CSS variables from next/font === */
+  --font-sans: var(--font-inter), var(--font-noto), system-ui, -apple-system, sans-serif;
+  --font-heading: var(--font-inter), var(--font-noto), system-ui, -apple-system, sans-serif;
   
   /* === Border Radius === */
   --radius-sm: 0.375rem;

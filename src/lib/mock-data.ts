@@ -10,6 +10,7 @@ export const mockCategories: Category[] = [
     slug: 'vegetables',
     enabled: true,
     order: 1,
+    image: '/images/categories/vegetables.jpg',
   },
   {
     id: 'fruits',
@@ -17,6 +18,7 @@ export const mockCategories: Category[] = [
     slug: 'fruits',
     enabled: true,
     order: 2,
+    image: '/images/categories/fruits.jpg',
   },
   {
     id: 'grains',
@@ -24,6 +26,7 @@ export const mockCategories: Category[] = [
     slug: 'grains',
     enabled: true,
     order: 3,
+    image: '/images/categories/grains.jpg',
   },
   {
     id: 'spices',
@@ -31,6 +34,7 @@ export const mockCategories: Category[] = [
     slug: 'spices',
     enabled: true,
     order: 4,
+    image: '/images/categories/spices.jpg',
   },
   {
     id: 'grocery',
@@ -38,6 +42,7 @@ export const mockCategories: Category[] = [
     slug: 'grocery',
     enabled: true,
     order: 5,
+    image: '/images/categories/grocery.jpg',
   },
 ];
 
@@ -56,7 +61,7 @@ export const mockProducts: Product[] = [
     price: 25,
     priceVisible: true,
     minWholesaleQty: 50,
-    images: ['/placeholder-product.svg'],
+    images: ['/images/products/onion-1.jpg', '/images/products/onion-2.jpg'],
     available: true,
     seasonal: false,
     featured: true,
@@ -78,7 +83,7 @@ export const mockProducts: Product[] = [
     price: 30,
     priceVisible: true,
     minWholesaleQty: 50,
-    images: ['/placeholder-product.svg'],
+    images: ['/images/products/tomato-1.jpg', '/images/products/tomato-2.jpg'],
     available: true,
     seasonal: false,
     featured: true,
@@ -100,7 +105,7 @@ export const mockProducts: Product[] = [
     price: 20,
     priceVisible: true,
     minWholesaleQty: 100,
-    images: ['/placeholder-product.svg'],
+    images: ['/images/products/potato-1.jpg', '/images/products/potato-2.jpg'],
     available: true,
     seasonal: false,
     featured: false,
@@ -122,7 +127,7 @@ export const mockProducts: Product[] = [
     price: 40,
     priceVisible: true,
     minWholesaleQty: 50,
-    images: ['/placeholder-product.svg'],
+    images: ['/images/products/banana-1.jpg', '/images/products/banana-2.jpg'],
     available: true,
     seasonal: false,
     featured: true,
@@ -144,7 +149,7 @@ export const mockProducts: Product[] = [
     price: null,
     priceVisible: false,
     minWholesaleQty: 10,
-    images: ['/placeholder-product.svg'],
+    images: ['/images/products/mango-1.jpg', '/images/products/mango-2.jpg'],
     available: false,
     seasonal: true,
     featured: true,
@@ -166,7 +171,7 @@ export const mockProducts: Product[] = [
     price: 85,
     priceVisible: true,
     minWholesaleQty: 25,
-    images: ['/placeholder-product.svg'],
+    images: ['/images/products/rice-1.jpg', '/images/products/rice-2.jpg'],
     available: true,
     seasonal: false,
     featured: false,
@@ -188,7 +193,7 @@ export const mockProducts: Product[] = [
     price: 150,
     priceVisible: true,
     minWholesaleQty: 10,
-    images: ['/placeholder-product.svg'],
+    images: ['/images/products/turmeric-1.jpg', '/images/products/turmeric-2.jpg'],
     available: true,
     seasonal: false,
     featured: false,
@@ -210,7 +215,7 @@ export const mockProducts: Product[] = [
     price: 42,
     priceVisible: true,
     minWholesaleQty: 50,
-    images: ['/placeholder-product.svg'],
+    images: ['/images/products/sugar-1.jpg', '/images/products/sugar-2.jpg'],
     available: true,
     seasonal: false,
     featured: false,
@@ -253,6 +258,14 @@ export const categoryIcons: Record<string, string> = {
   grains: '🌾',
   spices: '🌶️',
   grocery: '🛒',
+};
+
+export const categoryImages: Record<string, string> = {
+  vegetables: '/images/categories/vegetables.jpg',
+  fruits: '/images/categories/fruits.jpg',
+  grains: '/images/categories/grains.jpg',
+  spices: '/images/categories/spices.jpg',
+  grocery: '/images/categories/grocery.jpg',
 };
 
 export const unitLabels: Record<string, Record<string, string>> = {

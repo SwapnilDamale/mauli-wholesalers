@@ -9,6 +9,15 @@ export const categoryIcons: Record<string, string> = {
   grocery: '🛒',
 };
 
+/** Category dummy images */
+export const categoryImages: Record<string, string> = {
+  vegetables: '/images/categories/vegetables.jpg',
+  fruits: '/images/categories/fruits.jpg',
+  grains: '/images/categories/grains.jpg',
+  spices: '/images/categories/spices.jpg',
+  grocery: '/images/categories/grocery.jpg',
+};
+
 /** Unit display labels */
 export const unitLabels: Record<string, Record<Locale, string>> = {
   kg: { en: 'kg', hi: 'किलो', mr: 'किलो' },

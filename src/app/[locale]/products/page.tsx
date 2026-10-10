@@ -1,6 +1,6 @@
-import { setRequestLocale } from 'next-intl/server';
-import { getTranslations } from 'next-intl/server';
-import { getProducts, getCategories } from '@/lib/firebase/services';
+import { Suspense } from 'react';
+import { setRequestLocale, getTranslations } from 'next-intl/server';
+import { getAllProducts, getCategories } from '@/lib/services/product-service';
 import { buildPageMetadata } from '@/lib/seo';
 import ProductsPageClient from './ProductsPageClient';
 import { routing } from '@/i18n/routing';
@@ -31,17 +31,19 @@ export default async function ProductsPage({
   setRequestLocale(locale);
 
   const [products, categories] = await Promise.all([
-    getProducts(),
+    getAllProducts(),
     getCategories(),
   ]);
 
   return (
     <div className="container-narrow py-8 sm:py-12">
-      <ProductsPageClient
-        products={products}
-        categories={categories}
-        locale={locale}
-      />
+      <Suspense fallback={<div className="py-12 text-center text-surface-500">Loading products...</div>}>
+        <ProductsPageClient
+          products={products}
+          categories={categories}
+          locale={locale}
+        />
+      </Suspense>
     </div>
   );
 }

@@ -19,11 +19,17 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, email.trim(), password);
       router.push('/admin');
     } catch (err: any) {
       console.error('Login error:', err);
-      setError(err.message || 'Invalid login credentials');
+      if (err.code === 'auth/invalid-credential' || err.message?.includes('invalid-credential')) {
+        setError('Incorrect email or password. Please verify the email spelling and password in your Firebase Authentication console.');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Too many failed login attempts. Please wait a moment and try again.');
+      } else {
+        setError(err.message || 'Invalid login credentials');
+      }
     } finally {
       setLoading(false);
     }

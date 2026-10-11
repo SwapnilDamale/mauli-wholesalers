@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { isFirebaseAdminConfigured, getAdminAuth } from '@/lib/firebase/admin';
+import { isFirebaseAdminConfigured } from '@/lib/firebase/env';
 
 /**
  * Server-side auth guard for admin pages.
@@ -24,7 +24,8 @@ export async function requireAdmin(): Promise<void> {
   }
 
   try {
-    const adminAuth = getAdminAuth();
+    const { getAdminAuth } = await import('@/lib/firebase/admin');
+    const adminAuth = await getAdminAuth();
     const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
     const isAdmin = decoded.admin === true;
     if (!isAdmin) {

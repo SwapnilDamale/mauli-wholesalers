@@ -5,17 +5,13 @@ import { productSchema, categorySchema, settingsSchema } from '@/lib/validations
 import type { Product, Category, BusinessSettings } from '@/types';
 import { mockProducts, mockCategories, mockSettings } from '@/lib/mock-data';
 
-function isFirebaseConfigured(): boolean {
-  return !!(
-    process.env.FIREBASE_ADMIN_PROJECT_ID &&
-    process.env.FIREBASE_ADMIN_CLIENT_EMAIL &&
-    process.env.FIREBASE_ADMIN_PRIVATE_KEY
-  );
-}
+import { isFirebaseAdminConfigured } from '@/lib/firebase/env';
+
+const isFirebaseConfigured = isFirebaseAdminConfigured;
 
 async function getDb() {
   const { getAdminDb } = await import('@/lib/firebase/admin');
-  return getAdminDb();
+  return await getAdminDb();
 }
 
 // In-memory fallback stores for local dev when Firebase isn't configured
@@ -157,14 +153,18 @@ export async function deleteCategoryAction(id: string): Promise<{ success: boole
 
 export async function saveSettingsAction(data: BusinessSettings): Promise<{ success: boolean; error?: string }> {
   try {
-    const { saveBusinessSettings } = await import('@/lib/firebase/services');
-    await saveBusinessSettings(data);
+    if (isFirebaseAdminConfigured()) {
+      const { saveBusinessSettings } = await import('@/lib/firebase/services');
+      await saveBusinessSettings(data);
+    }
     localSettings = { ...data };
 
     revalidatePath('/', 'layout');
     revalidatePath('/[locale]', 'layout');
+    revalidatePath('/[locale]', 'page');
     revalidatePath('/[locale]/contact', 'page');
     revalidatePath('/[locale]/about', 'page');
+    revalidatePath('/[locale]/products', 'page');
     revalidatePath('/admin/settings', 'page');
     return { success: true };
   } catch (err: any) {

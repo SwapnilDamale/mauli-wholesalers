@@ -4,6 +4,7 @@ import createNextIntlPlugin from 'next-intl/plugin';
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ['firebase-admin'],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },

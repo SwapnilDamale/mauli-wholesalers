@@ -1,7 +1,7 @@
 import type { Product, Category, BusinessSettings, Enquiry, EnquiryStatus } from '@/types';
 import type { Locale } from '@/i18n/routing';
 import { mockProducts, mockCategories, mockSettings } from '@/lib/mock-data';
-import { isFirebaseAdminConfigured } from '@/lib/firebase/admin';
+import { isFirebaseAdminConfigured } from '@/lib/firebase/env';
 import { db, isFirebaseClientConfigured } from '@/lib/firebase/config';
 import {
   doc,
@@ -21,7 +21,7 @@ import { mapProduct, mapCategory, mapEnquiry, mapBusinessSettings } from '@/lib/
 
 async function getDb() {
   const { getAdminDb } = await import('@/lib/firebase/admin');
-  return getAdminDb();
+  return await getAdminDb();
 }
 
 function logDataError(context: string, error: unknown) {

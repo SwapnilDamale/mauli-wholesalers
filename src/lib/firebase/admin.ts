@@ -1,29 +1,28 @@
-import { initializeApp, getApps, cert, type App } from 'firebase-admin/app';
-import { getFirestore, type Firestore } from 'firebase-admin/firestore';
-import { getAuth, type Auth } from 'firebase-admin/auth';
-import { getStorage, type Storage } from 'firebase-admin/storage';
+import { isFirebaseAdminConfigured } from './env';
 
-export function isFirebaseAdminConfigured(): boolean {
-  return Boolean(
-    process.env.FIREBASE_ADMIN_PROJECT_ID &&
-      process.env.FIREBASE_ADMIN_CLIENT_EMAIL &&
-      process.env.FIREBASE_ADMIN_PRIVATE_KEY
-  );
-}
+export { isFirebaseAdminConfigured };
 
-function getAdminApp(): App {
-  const existing = getApps()[0];
-  if (existing) {
-    return existing;
-  }
+let adminAppInstance: any = null;
 
+export async function getAdminApp() {
   if (!isFirebaseAdminConfigured()) {
     throw new Error(
       'Firebase Admin is not configured. Set FIREBASE_ADMIN_PROJECT_ID, FIREBASE_ADMIN_CLIENT_EMAIL, and FIREBASE_ADMIN_PRIVATE_KEY.'
     );
   }
 
-  return initializeApp({
+  if (adminAppInstance) {
+    return adminAppInstance;
+  }
+
+  const { initializeApp, getApps, cert } = await import('firebase-admin/app');
+  const existing = getApps()[0];
+  if (existing) {
+    adminAppInstance = existing;
+    return existing;
+  }
+
+  adminAppInstance = initializeApp({
     credential: cert({
       projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
       clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
@@ -31,20 +30,24 @@ function getAdminApp(): App {
     }),
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   });
+
+  return adminAppInstance;
 }
 
-export function getAdminDb(): Firestore {
-  return getFirestore(getAdminApp());
+export async function getAdminDb() {
+  const app = await getAdminApp();
+  const { getFirestore } = await import('firebase-admin/firestore');
+  return getFirestore(app);
 }
 
-export function getAdminAuth(): Auth {
-  return getAuth(getAdminApp());
+export async function getAdminAuth() {
+  const app = await getAdminApp();
+  const { getAuth } = await import('firebase-admin/auth');
+  return getAuth(app);
 }
 
-export function getAdminStorage(): Storage {
-  return getStorage(getAdminApp());
+export async function getAdminStorage() {
+  const app = await getAdminApp();
+  const { getStorage } = await import('firebase-admin/storage');
+  return getStorage(app);
 }
-
-export const adminDb = isFirebaseAdminConfigured() ? getAdminDb() : (null as unknown as Firestore);
-export const adminAuth = isFirebaseAdminConfigured() ? getAdminAuth() : (null as unknown as Auth);
-export const adminStorage = isFirebaseAdminConfigured() ? getAdminStorage() : (null as unknown as Storage);

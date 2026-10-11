@@ -1,4 +1,4 @@
-import type { DocumentData } from 'firebase-admin/firestore';
+import type { DocumentData } from 'firebase/firestore';
 import type { Product, Category, Enquiry, BusinessSettings, LocalizedText } from '@/types';
 import { locales, type Locale } from '@/i18n/routing';
 
